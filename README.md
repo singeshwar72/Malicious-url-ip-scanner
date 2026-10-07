@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # CyberScan – Malicious URL & IP Scanner
 ### Cyber Threat Detection and Risk Analysis System
 
@@ -456,3 +457,7 @@ Return dashboard statistics (totals, daily counts).
 ---
 
 *CyberScan – Defensive Cybersecurity Tool | B.Tech CSE Project | For Authorised Educational Use Only*
+=======
+# Malicious-url-ip-scanner
+🔐 **Malicious URL &amp; IP Scanner** — A cybersecurity web application that analyzes URLs and IP addresses to identify potentially malicious or suspicious activity. Built with Python/Flask, HTML, CSS, and JavaScript, it provides security checks, risk assessment, and easy-to-understand scan results for educational and authorized security analysis.
+>>>>>>> 4451477c059d0d0221171ba294558b45373eac71
