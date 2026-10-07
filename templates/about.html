@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block title %}About – CyberScan{% endblock %}
+
+{% block content %}
+
+<div class="page-header mb-4">
+  <h1 class="h3 fw-bold mb-0">
+    <i class="bi bi-info-circle text-accent me-2"></i>About CyberScan
+  </h1>
+  <p class="text-muted small mb-0">Malicious URL &amp; IP Scanner – Cyber Threat Detection and Risk Analysis System</p>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+
+    <!-- Project Overview -->
+    <div class="cyber-card mb-4">
+      <div class="cyber-card-header">
+        <i class="bi bi-book me-2 text-accent"></i>Project Overview
+      </div>
+      <div class="cyber-card-body">
+        <p>
+          <strong>CyberScan</strong> is a defensive cybersecurity web application developed as a
+          B.Tech Computer Science &amp; Engineering project. It provides automated threat detection
+          and risk analysis for URLs and IP addresses using a transparent, rule-based scoring engine.
+        </p>
+        <p class="mb-0">
+          The application is designed for <strong>authorised, defensive use only</strong>. It does
+          not perform port scanning, exploitation, brute-force, or any offensive cybersecurity
+          operations. All analysis is read-only and passive unless an external reputation API
+          is explicitly configured.
+        </p>
+      </div>
+    </div>
+
+    <!-- How It Works -->
+    <div class="cyber-card mb-4">
+      <div class="cyber-card-header">
+        <i class="bi bi-diagram-3 me-2 text-accent"></i>How It Works
+      </div>
+      <div class="cyber-card-body">
+        <ol class="mb-0">
+          <li class="mb-2">User submits a <strong>URL</strong> or <strong>IP address</strong> (IPv4 / IPv6).</li>
+          <li class="mb-2">The input is validated and classified by the <code>validators.py</code> module.</li>
+          <li class="mb-2">The appropriate scanner (<code>url_scanner.py</code> or <code>ip_scanner.py</code>) performs passive analysis.</li>
+          <li class="mb-2">Detected indicators are passed to <code>risk_engine.py</code>, which calculates a deterministic <strong>0–100 risk score</strong> using weighted rules.</li>
+          <li class="mb-2">If external APIs are configured (VirusTotal, AbuseIPDB, IPinfo), their results are factored in.</li>
+          <li class="mb-2">The result is stored in a local <strong>SQLite</strong> database and displayed as a detailed security report.</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Risk Score Legend -->
+    <div class="cyber-card mb-4">
+      <div class="cyber-card-header">
+        <i class="bi bi-speedometer me-2 text-accent"></i>Risk Score Bands
+      </div>
+      <div class="cyber-card-body">
+        <div class="table-responsive">
+          <table class="table table-dark table-sm cyber-table mb-0">
+            <thead>
+              <tr><th>Score Range</th><th>Verdict</th><th>Meaning</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0 – 19</td><td><span class="verdict-badge verdict-safe">SAFE</span></td><td>No significant indicators detected.</td></tr>
+              <tr><td>20 – 39</td><td><span class="verdict-badge verdict-low-risk">LOW RISK</span></td><td>Minor concerns. Proceed with caution.</td></tr>
+              <tr><td>40 – 59</td><td><span class="verdict-badge verdict-suspicious">SUSPICIOUS</span></td><td>Multiple suspicious patterns. Do not share credentials.</td></tr>
+              <tr><td>60 – 79</td><td><span class="verdict-badge verdict-high-risk">HIGH RISK</span></td><td>Strong indicators of malicious intent. Avoid.</td></tr>
+              <tr><td>80 – 100</td><td><span class="verdict-badge verdict-malicious">MALICIOUS</span></td><td>Confirmed malicious. Block immediately.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <div class="cyber-card mb-4">
+      <div class="cyber-card-header">
+        <i class="bi bi-stars me-2 text-accent"></i>Features
+      </div>
+      <div class="cyber-card-body">
+        <div class="row g-2">
+          {% set features = [
+            ('shield-check', 'URL analysis (scheme, domain, keywords, encoding, TLD, subdomains)'),
+            ('globe2', 'IPv4 and IPv6 classification and reverse DNS lookup'),
+            ('graph-up', 'Transparent weighted risk scoring engine'),
+            ('database', 'SQLite scan history with search, filter, and pagination'),
+            ('cloud-check', 'Optional VirusTotal, AbuseIPDB, and IPinfo integration'),
+            ('bar-chart', 'Real-time Chart.js analytics from live database'),
+            ('phone', 'Fully responsive Bootstrap 5 dark cybersecurity dashboard'),
+            ('lock', 'Parameterised SQL, input validation, security headers'),
+          ] %}
+          {% for icon, text in features %}
+          <div class="col-md-6">
+            <div class="d-flex gap-2 align-items-start">
+              <i class="bi bi-{{ icon }} text-accent mt-1 flex-shrink-0"></i>
+              <span class="small">{{ text }}</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /col-lg-8 -->
+
+  <div class="col-lg-4">
+
+    <!-- Tech Stack -->
+    <div class="cyber-card mb-4">
+      <div class="cyber-card-header">
+        <i class="bi bi-stack me-2 text-accent"></i>Technology Stack
+      </div>
+      <div class="cyber-card-body">
+        {% set stack = [
+          ('Frontend', 'HTML5, CSS3, JavaScript ES6+'),
+          ('UI Framework', 'Bootstrap 5'),
+          ('Charts', 'Chart.js 4'),
+          ('Backend', 'Python 3 + Flask'),
+          ('Database', 'SQLite (stdlib sqlite3)'),
+          ('Analysis', 'urllib, ipaddress, socket, re, hashlib'),
+          ('APIs (optional)', 'VirusTotal, AbuseIPDB, IPinfo'),
+        ] %}
+        {% for label, val in stack %}
+        <div class="tech-item">
+          <span class="tech-label">{{ label }}</span>
+          <span class="tech-value small">{{ val }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Security Disclaimer -->
+    <div class="cyber-card mb-4 border border-warning">
+      <div class="cyber-card-header text-warning">
+        <i class="bi bi-exclamation-triangle me-2"></i>Security Disclaimer
+      </div>
+      <div class="cyber-card-body small">
+        <p>This tool is intended for <strong>defensive, educational, and authorised analysis only</strong>.</p>
+        <p>Do not use this application to scan targets you do not own or have explicit permission to analyse.</p>
+        <p class="mb-0">The authors accept no responsibility for misuse.</p>
+      </div>
+    </div>
+
+    <!-- Version Info -->
+    <div class="cyber-card mb-4">
+      <div class="cyber-card-header">
+        <i class="bi bi-tag me-2 text-accent"></i>Project Info
+      </div>
+      <div class="cyber-card-body">
+        <div class="tech-item"><span class="tech-label">Version</span><span class="tech-value">1.0.0</span></div>
+        <div class="tech-item"><span class="tech-label">Category</span><span class="tech-value">Cybersecurity</span></div>
+        <div class="tech-item"><span class="tech-label">Type</span><span class="tech-value">Defensive / Analysis</span></div>
+        <div class="tech-item"><span class="tech-label">Licence</span><span class="tech-value">Educational</span></div>
+      </div>
+    </div>
+
+  </div><!-- /col-lg-4 -->
+</div>
+
+{% endblock %}

@@ -1,0 +1,30 @@
+# Environment variables – NEVER commit secrets
+.env
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# SQLite database (contains scan results – do not commit)
+*.db
+*.sqlite3
+
+# pytest cache
+.pytest_cache/
+htmlcov/
+.coverage
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db

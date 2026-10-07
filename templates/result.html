@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+{% block title %}Scan Result #{{ scan.id }} – CyberScan{% endblock %}
+
+{% block content %}
+
+{% set verdict_class = scan.verdict | lower | replace(' ', '-') %}
+
+<!-- Header -->
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+  <div>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-1">
+        <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('history_page') }}">History</a></li>
+        <li class="breadcrumb-item active">Scan #{{ scan.id }}</li>
+      </ol>
+    </nav>
+    <h1 class="h3 fw-bold mb-0">
+      <i class="bi bi-file-earmark-text text-accent me-2"></i>Security Scan Report
+    </h1>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('index') }}#scan-panel" class="btn btn-accent">
+      <i class="bi bi-search me-1"></i>Scan Another Target
+    </a>
+    <a href="{{ url_for('history_page') }}" class="btn btn-outline-secondary">
+      <i class="bi bi-clock-history me-1"></i>History
+    </a>
+  </div>
+</div>
+
+<!-- ===== VERDICT HERO ===== -->
+<div class="result-hero result-hero--{{ verdict_class }} mb-4">
+  <div class="row align-items-center g-4">
+    <div class="col-md-7">
+      <div class="text-muted small mb-1">TARGET</div>
+      <div class="font-mono fs-6 fw-bold text-break mb-2">{{ scan.target }}</div>
+      <div class="d-flex flex-wrap gap-2 align-items-center">
+        <span class="badge bg-secondary">{{ scan.target_type }}</span>
+        {% if scan.is_https %}
+          <span class="badge bg-success"><i class="bi bi-lock me-1"></i>HTTPS</span>
+        {% elif scan.target_type == 'URL' %}
+          <span class="badge bg-danger"><i class="bi bi-unlock me-1"></i>HTTP</span>
+        {% endif %}
+        <span class="text-muted small">
+          <i class="bi bi-calendar me-1"></i>{{ scan.scan_time[:19] | replace('T', ' ') }} UTC
+        </span>
+      </div>
+    </div>
+    <div class="col-md-5 text-md-end">
+      <div class="verdict-badge verdict-{{ verdict_class }} fs-5 px-4 py-2 d-inline-block mb-2">
+        {{ scan.verdict }}
+      </div>
+      <div class="risk-score-display">
+        <span class="score-number risk-color--{{ verdict_class }}">{{ scan.risk_score }}</span>
+        <span class="score-denom text-muted"> / 100</span>
+      </div>
+      <div class="small text-muted">Risk Score</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+
+  <!-- Left column -->
+  <div class="col-lg-8">
+
+    <!-- Technical Info (URL or IP) -->
+    <div class="cyber-card mb-4">
+      <div class="cyber-card-header">
+        <i class="bi bi-info-circle me-2 text-accent"></i>
+        {% if scan.target_type == 'URL' %}URL Information
+        {% else %}IP Address Information{% endif %}
+      </div>
+      <div class="cyber-card-body">
+        {% set tech = scan.technical_info %}
+        {% if scan.target_type == 'URL' %}
+          {% set parsed = tech.parsed if tech and tech.parsed else {} %}
+          {% set technical = tech.technical if tech and tech.technical else {} %}
+          <div class="row g-2">
+            <div class="col-sm-6 col-md-4"><div class="tech-item"><span class="tech-label">Scheme</span><span class="tech-value font-mono">{{ parsed.scheme | upper or '—' }}</span></div></div>
+            <div class="col-sm-6 col-md-4"><div class="tech-item"><span class="tech-label">Host</span><span class="tech-value font-mono">{{ parsed.host or '—' }}</span></div></div>
+            <div class="col-sm-6 col-md-4"><div class="tech-item"><span class="tech-label">Domain</span><span class="tech-value font-mono">{{ parsed.domain or '—' }}</span></div></div>
+            <div class="col-sm-6 col-md-4"><div class="tech-item"><span class="tech-label">TLD</span><span class="tech-value font-mono">{{ parsed.tld or '—' }}</span></div></div>
+            <div class="col-sm-6 col-md-4"><div class="tech-item"><span class="tech-label">Port</span><span class="tech-value font-mono">{{ parsed.port or 'Default' }}</span></div></div>
+            <div class="col-sm-6 col-md-4"><div class="tech-item"><span class="tech-label">Subdomains</span><span class="tech-value font-mono">{{ parsed.subdomains or 0 }}</span></div></div>
+            <div class="col-sm-6 col-md-4"><div class="tech-item"><span class="tech-label">Path</span><span class="tech-value font-mono text-truncate" title="{{ parsed.path }}">{{ parsed.path or '/' }}</span></div></div>
+            <div class="col-sm-6 col-md-4"><div class="tech-item"><span class="tech-label">URL Length</span><span class="tech-value font-mono">{{ technical.url_length or '—' }}</span></div></div>
+            <div class="col-sm-6 col-md-4"><div class="tech-item"><span class="tech-label">Resolved IP</span><span class="tech-value font-mono">{{ technical.ip_address or '—' }}</span></div></div>
+            {% if technical.reverse_dns %}
+            <div class="col-sm-12"><div class="tech-item"><span class="tech-label">Reverse DNS</span><span class="tech-value font-mono">{{ technical.reverse_dns }}</span></div></div>
+            {% endif %}
+            {% if technical.matched_keywords %}
+            <div class="col-12"><div class="tech-item"><span class="tech-label">Matched Keywords</span><span class="tech-value text-warning">{{ technical.matched_keywords | join(', ') }}</span></div></div>
+            {% endif %}
+          </div>
+        {% else %}
+          {% set ip_info = tech.ip_info if tech and tech.ip_info else {} %}
+          {% set technical = tech.technical if tech and tech.technical else {} %}
+          <div class="row g-2">
+            <div class="col-sm-6 col-md-4"><div class="tech-item"><span class="tech-label">IP Address</span><span class="tech-value font-mono">{{ scan.ip_address or scan.target }}</span></div></div>
+            <div class="col-sm-6 col-md-4"><div class="tech-item"><span class="tech-label">Version</span><span class="tech-value font-mono">IPv{{ ip_info.version or '4' }}</span></div></div>
+            <div class="col-sm-6 col-md-4"><div class="tech-item"><span class="tech-label">Classification</span><span class="tech-value font-mono">{{ ip_info.ip_class or '—' }}</span></div></div>
+            <div class="col-sm-6 col-md-4"><div class="tech-item"><span class="tech-label">Is Global</span><span class="tech-value {{ 'text-success' if ip_info.is_global else 'text-muted' }}">{{ 'Yes' if ip_info.is_global else 'No' }}</span></div></div>
+            <div class="col-sm-6 col-md-4"><div class="tech-item"><span class="tech-label">Is Private</span><span class="tech-value">{{ 'Yes' if ip_info.is_private else 'No' }}</span></div></div>
+            <div class="col-sm-6 col-md-4"><div class="tech-item"><span class="tech-label">Reverse DNS</span><span class="tech-value font-mono">{{ ip_info.reverse_dns or '—' }}</span></div></div>
+            {% if technical.country %}
+            <div class="col-sm-6 col-md-4"><div class="tech-item"><span class="tech-label">Country</span><span class="tech-value">{{ technical.country }}</span></div></div>
+            {% endif %}
+            {% if technical.asn %}
+            <div class="col-sm-6 col-md-4"><div class="tech-item"><span class="tech-label">ASN / Org</span><span class="tech-value font-mono">{{ technical.asn }}</span></div></div>
+            {% endif %}
+          </div>
+        {% endif %}
+
+        <!-- Errors / warnings -->
+        {% if tech and tech.errors %}
+          <div class="mt-3 pt-3 border-top border-secondary">
+            <p class="small text-muted mb-1">Analysis Notes</p>
+            {% for e in tech.errors %}
+              <div class="small text-warning"><i class="bi bi-exclamation-triangle me-1"></i>{{ e }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Security Indicators -->
+    <div class="cyber-card mb-4">
+      <div class="cyber-card-header">
+        <i class="bi bi-shield-check me-2 text-accent"></i>Security Indicator Checks
+      </div>
+      <div class="cyber-card-body">
+        {% if scan.risk_reasons is iterable and scan.risk_reasons %}
+          <div class="risk-reasons mb-3">
+            {% for reason in scan.risk_reasons %}
+              <div class="risk-reason-item">
+                <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                <code class="text-warning">{{ reason }}</code>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="text-success small mb-3">
+            <i class="bi bi-check-circle-fill me-2"></i>No suspicious indicators detected.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Recommendation -->
+    <div class="cyber-card mb-4">
+      <div class="cyber-card-header">
+        <i class="bi bi-lightbulb me-2 text-accent"></i>Recommendation
+      </div>
+      <div class="cyber-card-body">
+        {% set rec_map = {
+          'SAFE': 'No significant threats detected. Continue using normal security precautions.',
+          'LOW RISK': 'Minor concerns noted. Proceed with caution and verify the source.',
+          'SUSPICIOUS': 'Suspicious indicators detected. Do not share sensitive information with this target.',
+          'HIGH RISK': 'High risk target. Avoid accessing or interacting with this target.',
+          'MALICIOUS': 'Target shows strong malicious indicators. Block immediately and do not access.'
+        } %}
+        <div class="alert alert-{{ 'success' if scan.verdict == 'SAFE' else ('warning' if scan.verdict in ['LOW RISK','SUSPICIOUS'] else 'danger') }} d-flex gap-2 mb-0">
+          <i class="bi bi-{{ 'check-circle' if scan.verdict == 'SAFE' else ('exclamation-triangle' if scan.verdict in ['LOW RISK','SUSPICIOUS'] else 'x-octagon') }} fs-5 flex-shrink-0 mt-1"></i>
+          <div>{{ rec_map.get(scan.verdict, 'Review findings above.') }}</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /col-lg-8 -->
+
+  <!-- Right column -->
+  <div class="col-lg-4">
+
+    <!-- Risk gauge -->
+    <div class="cyber-card mb-4">
+      <div class="cyber-card-header">
+        <i class="bi bi-speedometer2 me-2 text-accent"></i>Risk Score
+      </div>
+      <div class="cyber-card-body text-center">
+        <div class="gauge-chart-wrap mb-2">
+          <canvas id="gauge-chart" width="200" height="200"></canvas>
+        </div>
+        <div class="risk-score-display">
+          <span class="score-number risk-color--{{ verdict_class }}">{{ scan.risk_score }}</span>
+          <span class="score-denom text-muted"> / 100</span>
+        </div>
+        <div class="verdict-badge verdict-{{ verdict_class }} mt-2">{{ scan.verdict }}</div>
+      </div>
+    </div>
+
+    <!-- Reputation / external service status -->
+    {% set rep = scan.technical_info.technical.reputation if scan.technical_info and scan.technical_info.technical else {} %}
+    <div class="cyber-card mb-4">
+      <div class="cyber-card-header">
+        <i class="bi bi-cloud-check me-2 text-accent"></i>Reputation Data
+      </div>
+      <div class="cyber-card-body">
+        {% if rep and rep.status and 'not configured' not in rep.status %}
+          <div class="small text-success mb-2">
+            <i class="bi bi-check-circle me-1"></i>{{ rep.status }}
+          </div>
+          {% if rep.abuse_confidence_score is defined %}
+          <div class="tech-item">
+            <span class="tech-label">Abuse Score</span>
+            <span class="tech-value">{{ rep.abuse_confidence_score }}%</span>
+          </div>
+          {% endif %}
+          {% if rep.country_code %}
+          <div class="tech-item">
+            <span class="tech-label">Country</span>
+            <span class="tech-value">{{ rep.country_code }}</span>
+          </div>
+          {% endif %}
+          {% if rep.is_tor is defined %}
+          <div class="tech-item">
+            <span class="tech-label">Tor Node</span>
+            <span class="tech-value {{ 'text-danger' if rep.is_tor else 'text-success' }}">
+              {{ 'Yes' if rep.is_tor else 'No' }}
+            </span>
+          </div>
+          {% endif %}
+        {% else %}
+          <div class="small text-muted">
+            <i class="bi bi-hdd me-1"></i>External reputation service not configured.<br>
+            Add API keys to .env to enable cloud-based threat intelligence.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Scan metadata -->
+    <div class="cyber-card mb-4">
+      <div class="cyber-card-header">
+        <i class="bi bi-card-list me-2 text-accent"></i>Scan Metadata
+      </div>
+      <div class="cyber-card-body">
+        <div class="tech-item"><span class="tech-label">Scan ID</span><span class="tech-value font-mono">#{{ scan.id }}</span></div>
+        <div class="tech-item"><span class="tech-label">Timestamp</span><span class="tech-value small">{{ scan.scan_time[:19] | replace('T', ' ') }} UTC</span></div>
+        <div class="tech-item"><span class="tech-label">Target Type</span><span class="tech-value">{{ scan.target_type }}</span></div>
+        {% if scan.domain %}<div class="tech-item"><span class="tech-label">Domain</span><span class="tech-value font-mono">{{ scan.domain }}</span></div>{% endif %}
+        {% if scan.ip_address %}<div class="tech-item"><span class="tech-label">IP</span><span class="tech-value font-mono">{{ scan.ip_address }}</span></div>{% endif %}
+      </div>
+    </div>
+
+  </div><!-- /col-lg-4 -->
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Draw simple doughnut gauge
+(function(){
+  const score = {{ scan.risk_score }};
+  const verdict = "{{ scan.verdict }}";
+  const colorMap = {
+    'SAFE':'#22c55e','LOW RISK':'#84cc16','SUSPICIOUS':'#f59e0b',
+    'HIGH RISK':'#f97316','MALICIOUS':'#ef4444'
+  };
+  const color = colorMap[verdict] || '#6b7280';
+  const ctx = document.getElementById('gauge-chart');
+  if (ctx) {
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        datasets: [{
+          data: [score, 100 - score],
+          backgroundColor: [color, '#1e2433'],
+          borderWidth: 0,
+          circumference: 270,
+          rotation: -135,
+        }]
+      },
+      options: {
+        responsive: true,
+        cutout: '75%',
+        plugins: { legend: { display: false }, tooltip: { enabled: false } },
+        animation: { animateRotate: true, duration: 800 },
+      }
+    });
+  }
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block title %}Scan History – CyberScan{% endblock %}
+
+{% block content %}
+
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+  <div>
+    <h1 class="h3 fw-bold mb-0">
+      <i class="bi bi-clock-history text-accent me-2"></i>Scan History
+    </h1>
+    <p class="text-muted small mb-0">{{ total }} total scan{{ 's' if total != 1 else '' }} recorded</p>
+  </div>
+  <button class="btn btn-outline-danger btn-sm" id="clear-history-btn">
+    <i class="bi bi-trash me-1"></i>Clear All
+  </button>
+</div>
+
+<!-- ===== FILTER BAR ===== -->
+<form class="cyber-card mb-4" method="GET" id="filter-form">
+  <div class="cyber-card-body">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-4">
+        <label class="form-label small text-muted mb-1">Search Target</label>
+        <input type="text" class="form-control form-control-sm bg-dark border-secondary text-light"
+               name="search" value="{{ search }}" placeholder="domain, IP, keyword…" />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small text-muted mb-1">Type</label>
+        <select class="form-select form-select-sm bg-dark border-secondary text-light" name="type">
+          <option value="">All Types</option>
+          <option value="URL"  {% if target_type == 'URL'  %}selected{% endif %}>URL</option>
+          <option value="IPv4" {% if target_type == 'IPv4' %}selected{% endif %}>IPv4</option>
+          <option value="IPv6" {% if target_type == 'IPv6' %}selected{% endif %}>IPv6</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small text-muted mb-1">Verdict</label>
+        <select class="form-select form-select-sm bg-dark border-secondary text-light" name="verdict">
+          <option value="">All Verdicts</option>
+          {% for v in ['SAFE','LOW RISK','SUSPICIOUS','HIGH RISK','MALICIOUS'] %}
+          <option value="{{ v }}" {% if verdict == v %}selected{% endif %}>{{ v }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2 d-flex gap-1">
+        <button type="submit" class="btn btn-accent btn-sm flex-grow-1">
+          <i class="bi bi-funnel me-1"></i>Filter
+        </button>
+        <a href="{{ url_for('history_page') }}" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-x-lg"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+</form>
+
+<!-- ===== HISTORY TABLE ===== -->
+<div class="cyber-card mb-4">
+  <div class="cyber-card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-dark table-hover cyber-table mb-0">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Target</th>
+            <th>Type</th>
+            <th>Risk Score</th>
+            <th>Verdict</th>
+            <th>Scanned</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if scans %}
+            {% for s in scans %}
+            {% set vc = s.verdict | lower | replace(' ', '-') %}
+            <tr id="row-{{ s.id }}">
+              <td class="text-muted small">{{ s.id }}</td>
+              <td class="font-mono text-truncate" style="max-width:280px" title="{{ s.target }}">
+                {{ s.target }}
+              </td>
+              <td><span class="badge bg-secondary">{{ s.target_type }}</span></td>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <div class="risk-bar-wrap">
+                    <div class="risk-bar risk-bar--{{ vc }}" style="width:{{ s.risk_score }}%"></div>
+                  </div>
+                  <span class="small">{{ s.risk_score }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="verdict-badge verdict-{{ vc }}">{{ s.verdict }}</span>
+              </td>
+              <td class="text-muted small">{{ s.scan_time[:19] | replace('T', ' ') }}</td>
+              <td>
+                <div class="d-flex gap-1">
+                  <a href="{{ url_for('result_page', scan_id=s.id) }}"
+                     class="btn btn-sm btn-outline-info" title="View Report">
+                    <i class="bi bi-eye"></i>
+                  </a>
+                  <button class="btn btn-sm btn-outline-danger delete-btn"
+                          data-id="{{ s.id }}" title="Delete">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+          <tr>
+            <td colspan="7" class="text-center text-muted py-5">
+              <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+              {% if search or target_type or verdict %}
+                No scans match your filters.
+              {% else %}
+                No scan history yet. Run a scan from the
+                <a href="{{ url_for('index') }}">Dashboard</a>.
+              {% endif %}
+            </td>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGINATION ===== -->
+{% if total_pages > 1 %}
+<nav aria-label="History pagination">
+  <ul class="pagination pagination-sm justify-content-center">
+    <li class="page-item {% if page == 1 %}disabled{% endif %}">
+      <a class="page-link bg-dark border-secondary text-light"
+         href="?page={{ page - 1 }}&search={{ search }}&type={{ target_type }}&verdict={{ verdict }}">
+        &laquo; Prev
+      </a>
+    </li>
+    {% for p in range(1, total_pages + 1) %}
+    <li class="page-item {% if p == page %}active{% endif %}">
+      <a class="page-link bg-dark border-secondary text-light"
+         href="?page={{ p }}&search={{ search }}&type={{ target_type }}&verdict={{ verdict }}">
+        {{ p }}
+      </a>
+    </li>
+    {% endfor %}
+    <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+      <a class="page-link bg-dark border-secondary text-light"
+         href="?page={{ page + 1 }}&search={{ search }}&type={{ target_type }}&verdict={{ verdict }}">
+        Next &raquo;
+      </a>
+    </li>
+  </ul>
+</nav>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Delete individual scan
+document.querySelectorAll('.delete-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const id = btn.dataset.id;
+    if (!confirm(`Delete scan #${id}?`)) return;
+    try {
+      const resp = await fetch(`/api/scan/${id}`, { method: 'DELETE' });
+      const data = await resp.json();
+      if (data.success) {
+        document.getElementById(`row-${id}`)?.remove();
+      } else {
+        alert(data.error || 'Delete failed.');
+      }
+    } catch {
+      alert('Network error. Please try again.');
+    }
+  });
+});
+
+// Clear all history
+document.getElementById('clear-history-btn')?.addEventListener('click', async () => {
+  if (!confirm('Delete ALL scan history? This cannot be undone.')) return;
+  try {
+    const resp = await fetch('/api/history/clear', { method: 'DELETE' });
+    const data = await resp.json();
+    if (data.success) {
+      window.location.reload();
+    } else {
+      alert(data.error || 'Clear failed.');
+    }
+  } catch {
+    alert('Network error. Please try again.');
+  }
+});
+</script>
+{% endblock %}
